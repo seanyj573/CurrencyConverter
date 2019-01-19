@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en-US">
+	<head>
+		<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular.min.js"></script>
+		<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+</head>
+	
+	<style>
+		.app_main{
+			padding: 50px;
+			margin: 25px;
+			background-color: lightgray;
+			border-radius: 15px;
+		}
+		.label{
+			text-align: right;
+		}
+		.dropdown-menu{
+			position: absolute;
+			height: 300px;
+			overflow-x: hidden;
+		}
+		.btn{
+			width: 80px;
+		}
+		.card{
+			margin: 0px;
+		}
+		.card-body{
+			margin: 0px;
+			padding: 0px;
+			width: 50px;
+		}
+	</style>
+	
+	<body>
+		<div class = "app_main col-sm-6" ng-app = "my_app" ng-controller = "json_fetch">
+				<div class = "form-group">
+					<label class = "col-sm-4 label">Current Currency : </label>
+					<button class = "btn btn-primary dropdown-toggle" href = "#" role = "button" id = "dropdownMenuLink" data-toggle = "dropdown" aria-haspopup = "true" aria-expanded = "false">
+						{{selectedCurr}}
+						<span class = "caret"></span>
+					</button>
+					<ul class = "dropdown-menu">
+						<li ng-repeat = "x in currencyList"><a class = "dropdown-item" href = "#" ng-click = "setItem(x,1)">{{x}}</a></li>
+					</ul>
+				</div>
+				
+				<div class = "form-group">
+					<label class = "col-sm-4 label">New Currency : </label>
+					<button class = "btn btn-primary dropdown-toggle" href = "#" role = "button" id = "dropdownMenuLink" data-toggle = "dropdown" aria-haspopup = "true" aria-expanded = "false">
+						{{selectedNew}}
+						<span class = "caret"></span>
+					</button>
+					<ul class = "dropdown-menu">
+						<li ng-repeat = "y in currencyList"><a class = "dropdown-item" href = "#" ng-click = "setItem(y,2)">{{y}}</a></li>
+					</ul>
+				</div>
+				
+				<div class = "form-group" style = "margin-bottom: 0px;">
+					<label class = "col-sm-4 label">Exchange Rate : </label>
+					<div class = "card d-inline-block col-sm-2">
+						<div class = "card-body">&nbsp{{conv_rate}}</div>
+					</div>
+				</div>
+		</div>
+	</body>
+	<script = "text/javascript">
+		
+		var app = angular.module("my_app",[]);
+		var firstCurr;
+		var secondCurr;
+		var currencyList = [];
+		
+		app.controller("json_fetch", function($scope, $http) {
+			
+			//create list of currencies on running
+			$http.get("https://api.exchangeratesapi.io/latest").then(function (data) {
+				Object.keys(data.data.rates).forEach(function(key) {
+					currencyList.push(key);
+				});
+				currencyList.push("EUR");
+				$scope.currencyList = currencyList.sort();
+				
+			});
+			
+			//gets currency selection from drop down boxes
+			$scope.setItem = function(item,order) {
+				if(order == 1) {
+					firstCurr = item;
+					$scope.selectedCurr = item;
+				} else {
+					secondCurr = item;
+					$scope.selectedNew = item;
+				}
+				if(firstCurr && secondCurr) {
+					$scope.convert();
+				}
+				
+			};
+			
+			//gets conversion rate once both boxes are populated
+			$scope.convert = function() {
+				$http.get("https://api.exchangeratesapi.io/latest?base="+firstCurr).then(function (data) {
+					Object.keys(data.data.rates).forEach(function(key) {
+						if(key == secondCurr) {
+							$scope.conv_rate = parseFloat(data.data.rates[key]).toFixed(2);
+						}
+					});
+
+				});
+			};
+		});
+		
+	</script>
+</html>
